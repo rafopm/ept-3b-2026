@@ -1,13 +1,8 @@
 const Api = (() => {
   function getIdToken(){ return localStorage.getItem('ept_id_token') || ''; }
-  
   function isTokenExpired(token){
-    try{
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return (payload.exp * 1000) < Date.now() + 60000; // expira en <1min
-    }catch(e){ return true; }
+    try{ const payload = JSON.parse(atob(token.split('.')[1])); return (payload.exp * 1000) < Date.now() + 60000; }catch(e){ return true; }
   }
-
   async function request(action, params = {}, method = 'GET'){
     let url = API_URL + "?action=" + encodeURIComponent(action);
     const idToken = getIdToken();
@@ -16,30 +11,20 @@ const Api = (() => {
     if(method === 'GET'){
       for(const k in params){ if(params[k]!=null) url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); }
       const res = await fetch(url);
-      const data = await res.json();
-      if(data.error) throw new Error(data.error);
-      return data;
+      const text = await res.text();
+      try{ const data=JSON.parse(text); if(data.error) throw new Error(data.error); return data; }catch(e){ if(text.trim().startsWith('<')) throw new Error('Apps Script devolvió HTML (revisa deploy Cualquier persona). '+text.substring(0,200)); throw e; }
     } else {
-      options.headers = {};
-      options.body = JSON.stringify(params);
+      options.headers = {}; options.body = JSON.stringify(params);
       const res = await fetch(url, options);
-      const data = await res.json();
-      if(data.error) throw new Error(data.error);
-      return data;
+      const text = await res.text();
+      try{ const data=JSON.parse(text); if(data.error) throw new Error(data.error); return data; }catch(e){ if(text.trim().startsWith('<')) throw new Error('Apps Script devolvió HTML. '+text.substring(0,200)); throw e; }
     }
   }
-
   async function verifyToken(id_token){
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action:'verifyToken', id_token }),
-      headers: { 'Content-Type': 'text/plain' }
-    });
-    const data = await res.json();
-    if(data.error) throw new Error(data.error);
-    return data;
+    const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action:'verifyToken', id_token }), headers: { 'Content-Type': 'text/plain' } });
+    const text = await res.text();
+    try{ const data=JSON.parse(text); if(data.error) throw new Error(data.error); return data; }catch(e){ if(text.trim().startsWith('<')) throw new Error('Deploy no es Cualquier persona, devuelve HTML. '+text.substring(0,300)); throw new Error('Respuesta no JSON: '+text.substring(0,300)); }
   }
-
   return { request, verifyToken, getIdToken, isTokenExpired, legacyApi: (fn,...args)=>{
     const map = {
       getCurrentUser: ()=>request('getCurrentUser'),
