@@ -37,10 +37,12 @@ const Api = (() => {
   }
 
 async function verifyToken(id_token){
-  const url = API_URL + "?action=verifyToken&id_token=" + encodeURIComponent(id_token);
-  const res = await fetch(url);
-  const text = await res.text();
-  const data = JSON.parse(text);
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action:'verifyToken', id_token }),
+    headers: { 'Content-Type': 'text/plain' }
+  });
+  const data = await res.json();
   if(data.error) throw new Error(data.error);
   return data;
 }
