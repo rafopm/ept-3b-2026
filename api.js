@@ -36,6 +36,7 @@ const Api = (() => {
       calificarEntrega: ()=>request('calificarEntrega',{rowIndex:args[0],nota:args[1],comentario:args[2]},'POST'),
       getIncidenciasPorGradoSeccion: ()=>request('getIncidenciasPorGradoSeccion',{grado:args[0],seccion:args[1]}),
       getEntregasPorGradoSeccion: ()=>request('getEntregasPorGradoSeccion',{grado:args[0],seccion:args[1]}),
+      getLeccionesPorGrado: ()=>request('getLeccionesPorGrado',{grado:args[0]}),
       getStudentDashboard: ()=>request('getStudentDashboard',{email:args[0]}),
       getRecursos: ()=>request('getRecursos'),
       uploadFileToDrive: ()=>request('uploadFileToDrive',{base64Data:args[0],fileName:args[1],mimeType:args[2]},'POST'),
