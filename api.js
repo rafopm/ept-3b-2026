@@ -3,6 +3,21 @@ const Api = (() => {
   function isTokenExpired(token){
     try{ const payload = JSON.parse(atob(token.split('.')[1])); return (payload.exp * 1000) < Date.now() + 60000; }catch(e){ return true; }
   }
+  async function fetchWithRetry(url, options={}, retries=2){
+    for(let i=0;i<=retries;i++){
+      try{
+        const res=await fetch(url, options);
+        const text=await res.text();
+        if(text.trim().startsWith('<')) throw new Error('HTML recibido - redeploy como Cualquier persona');
+        const data=JSON.parse(text);
+        if(data.error) throw new Error(data.error);
+        return data;
+      }catch(e){
+        if(i===retries) throw e;
+        await new Promise(r=>setTimeout(r, 500*(i+1)));
+      }
+    }
+  }
   async function request(action, params = {}, method = 'GET'){
     let url = API_URL + "?action=" + encodeURIComponent(action);
     const idToken = getIdToken();
@@ -10,26 +25,23 @@ const Api = (() => {
     const options = { method };
     if(method === 'GET'){
       for(const k in params){ if(params[k]!=null) url += "&" + encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); }
-      const res = await fetch(url);
-      const text = await res.text();
-      try{ const data=JSON.parse(text); if(data.error) throw new Error(data.error); return data; }catch(e){ if(text.trim().startsWith('<')) throw new Error('Apps Script devolvió HTML (revisa deploy Cualquier persona). '+text.substring(0,200)); throw e; }
+      return await fetchWithRetry(url);
     } else {
       options.headers = {}; options.body = JSON.stringify(params);
-      const res = await fetch(url, options);
-      const text = await res.text();
-      try{ const data=JSON.parse(text); if(data.error) throw new Error(data.error); return data; }catch(e){ if(text.trim().startsWith('<')) throw new Error('Apps Script devolvió HTML. '+text.substring(0,200)); throw e; }
+      return await fetchWithRetry(url, options);
     }
   }
   async function verifyToken(id_token){
     const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action:'verifyToken', id_token }), headers: { 'Content-Type': 'text/plain' } });
     const text = await res.text();
-    try{ const data=JSON.parse(text); if(data.error) throw new Error(data.error); return data; }catch(e){ if(text.trim().startsWith('<')) throw new Error('Deploy no es Cualquier persona, devuelve HTML. '+text.substring(0,300)); throw new Error('Respuesta no JSON: '+text.substring(0,300)); }
+    try{ const data=JSON.parse(text); if(data.error) throw new Error(data.error); return data; }catch(e){ if(text.trim().startsWith('<')) throw new Error('Deploy no es Cualquier persona'); throw new Error('Respuesta no JSON: '+text.substring(0,300)); }
   }
   return { request, verifyToken, getIdToken, isTokenExpired, legacyApi: (fn,...args)=>{
     const map = {
       getCurrentUser: ()=>request('getCurrentUser'),
       getLogoBase64: ()=>request('getLogoBase64'),
       getEntregasPendientesDocente: ()=>request('getEntregasPendientesDocente'),
+      getTeacherDashboard: ()=>request('getTeacherDashboard'),
       getFiltrosDocente: ()=>request('getFiltrosDocente'),
       getAlumnosByGradoSeccion: ()=>request('getAlumnosByGradoSeccion',{grado:args[0],seccion:args[1]}),
       guardarIncidencias: ()=>request('guardarIncidencias',{lista:args[0]},'POST'),
