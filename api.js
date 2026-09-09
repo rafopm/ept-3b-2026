@@ -52,6 +52,9 @@ const Api = (() => {
       getStudentDashboard: ()=>request('getStudentDashboard',{email:args[0]}),
       getRecursos: ()=>request('getRecursos'),
       getNoticias: ()=>request('getNoticias'),
+      getNoticiasAdmin: ()=>request('getNoticiasAdmin'),
+      guardarNoticia: ()=>request('guardarNoticia',{noticia:args[0]},'POST'),
+      eliminarNoticia: ()=>request('eliminarNoticia',{rowIndex:args[0]},'POST'),
       uploadFileToDrive: ()=>request('uploadFileToDrive',{base64Data:args[0],fileName:args[1],mimeType:args[2]},'POST'),
       guardarEntrega: ()=>request('guardarEntrega',{form:args[0]},'POST')
     };
