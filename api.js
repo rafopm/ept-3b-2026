@@ -51,6 +51,7 @@ const Api = (() => {
       getLeccionesPorGrado: ()=>request('getLeccionesPorGrado',{grado:args[0]}),
       getStudentDashboard: ()=>request('getStudentDashboard',{email:args[0]}),
       getRecursos: ()=>request('getRecursos'),
+      getNoticias: ()=>request('getNoticias'),
       uploadFileToDrive: ()=>request('uploadFileToDrive',{base64Data:args[0],fileName:args[1],mimeType:args[2]},'POST'),
       guardarEntrega: ()=>request('guardarEntrega',{form:args[0]},'POST')
     };

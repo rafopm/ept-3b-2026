@@ -67,6 +67,7 @@ function applyTheme(t){localStorage.setItem('ept_theme',t);if(t==='light'){docum
 <div id="errorScreen" class="hidden bg-red-950/40 border border-red-900/50 p-4 rounded-2xl"><p id="errorMsg" class="text-sm text-red-300 break-words"></p></div>
 
 <div id="importantLinksTop" class="hidden mb-4 md:mb-5"><div class="flex items-center gap-2 mb-3 flex-wrap"><h3 class="font-bold text-sm">📌 Documentos importantes del bimestre</h3></div><div id="importantLinksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div></div>
+<section id="newsSection" class="hidden mb-4 md:mb-5" aria-labelledby="newsHeading"><div class="flex items-end justify-between gap-3 mb-3"><div><p class="text-[10px] tracking-[0.2em] uppercase font-bold text-violet-600 dark:text-violet-400">Actualidad</p><h2 id="newsHeading" class="font-extrabold text-lg md:text-xl">Noticias</h2></div><span class="text-[11px]" style="color:var(--muted)">Novedades del colegio</span></div><div id="newsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4"></div></section>
 
 <div id="studentDashboard" class="hidden space-y-4 md:space-y-5">
 <div class="card rounded-[16px] md:rounded-[24px] p-4 md:p-6"><p class="text-[10px] md:text-[11px] tracking-[0.22em] text-violet-600 dark:text-violet-400/70 uppercase mb-2">Panel Estudiante</p><h2 id="welcomeText" class="text-xl md:text-2xl font-extrabold">Hola</h2></div>
@@ -128,6 +129,7 @@ function applyTheme(t){localStorage.setItem('ept_theme',t);if(t==='light'){docum
 
 <div id="uploadModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden justify-center items-start md:items-center z-50 p-3 md:p-4 overflow-y-auto"><div class="card rounded-[16px] md:rounded-[20px] max-w-lg w-full p-5 md:p-6 my-4 md:my-0 max-h-[95vh] overflow-y-auto"><h3 id="modalTitle" class="font-bold mb-1 text-base">Entregar tarea</h3><p class="text-xs mb-4" style="color:var(--muted)">Completa todos los campos</p><input type="hidden" id="modalTaskId"><label class="text-[11px] font-bold tracking-widest uppercase" style="color:var(--muted)">Enlace de tu trabajo *</label><input id="linkTrabajo" class="w-full card2 rounded-xl px-4 py-3 text-sm mt-1.5 mb-3" placeholder="https://..."><label class="text-[11px] font-bold tracking-widest uppercase" style="color:var(--muted)">Archivo evidencia (opcional)</label><input id="archivoEvidencia" type="file" class="w-full card2 rounded-xl px-4 py-3 text-sm mt-1.5 mb-5 text-xs"><div class="space-y-4"><div><label class="text-[11px] font-bold uppercase">¿Qué aprendí hoy? *</label><textarea id="ref1" class="w-full card2 rounded-xl px-4 py-3 text-sm mt-1.5" rows="3" placeholder="Escribe lo que aprendiste..."></textarea></div><div><label class="text-[11px] font-bold uppercase">¿Qué me costó más? *</label><textarea id="ref2" class="w-full card2 rounded-xl px-4 py-3 text-sm mt-1.5" rows="3" placeholder="Qué parte fue difícil..."></textarea></div><div><label class="text-[11px] font-bold uppercase">¿Qué haré para mejorar? *</label><textarea id="ref3" class="w-full card2 rounded-xl px-4 py-3 text-sm mt-1.5" rows="3" placeholder="Tu compromiso..."></textarea></div></div><div class="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-6"><button id="btnCancelarModal" class="px-5 py-3 rounded-xl text-sm card2 w-full sm:w-auto">Cancelar</button><button id="btnSubmitTask" class="bg-zinc-900 dark:bg-white text-white dark:text-black px-6 py-3 rounded-xl text-sm font-bold w-full sm:w-auto">📤 Enviar entrega</button></div></div></div>
 </div>
+<div id="newsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden justify-center items-start md:items-center z-50 p-3 md:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="newsModalTitle"><div class="card rounded-[16px] md:rounded-[20px] max-w-3xl w-full p-5 md:p-7 my-4 md:my-0 max-h-[95vh] overflow-y-auto"><div class="flex justify-between items-start gap-4 mb-4"><div class="min-w-0"><p id="newsModalSubtitle" class="text-[10px] tracking-[0.18em] uppercase font-bold text-violet-600 dark:text-violet-400"></p><h2 id="newsModalTitle" class="text-xl md:text-2xl font-extrabold break-words"></h2></div><button id="btnCloseNews" class="card2 w-9 h-9 rounded-full shrink-0 text-lg" aria-label="Cerrar noticia">×</button></div><div id="newsModalBody"></div></div></div>
 
 <script src="./config.js"></script>
 <script src="./api.js"></script>
@@ -156,6 +158,31 @@ function renderImportantLinks(recursos){
   grid.innerHTML=html;
   container.classList.remove('hidden');
 }
+function renderNews(noticias){
+  const section=document.getElementById('newsSection');
+  const grid=document.getElementById('newsGrid');
+  if(!section||!grid) return;
+  if(!Array.isArray(noticias)||!noticias.length){section.classList.add('hidden');return;}
+  grid.innerHTML=noticias.map((n,index)=>{
+    const image=n.imagen?'<img src="'+App.esc(n.imagen)+'" alt="" class="w-full h-40 object-cover">':'<div class="w-full h-40 flex items-center justify-center text-4xl bg-violet-500/10">📰</div>';
+    return '<button type="button" class="card2 rounded-2xl overflow-hidden text-left hover:border-violet-500/50 transition focus:outline-none focus:ring-2 focus:ring-violet-500" data-news-index="'+index+'"><div>'+image+'</div><div class="p-4"><p class="text-[10px] uppercase tracking-[0.16em] font-bold text-violet-600 dark:text-violet-400">'+App.esc(n.subtitulo||'Novedad')+'</p><h3 class="font-extrabold text-base mt-1 break-words">'+App.esc(n.titulo)+'</h3><p class="text-xs mt-2 line-clamp-2" style="color:var(--muted)">'+App.esc(n.resumen||n.detalle||'')+'</p><span class="inline-block text-xs font-bold mt-3 text-violet-600 dark:text-violet-400">Leer noticia →</span></div></button>';
+  }).join('');
+  section.classList.remove('hidden');
+  grid.querySelectorAll('[data-news-index]').forEach(button=>button.addEventListener('click',()=>openNews(noticias[Number(button.getAttribute('data-news-index'))])));
+}
+function openNews(noticia){
+  const modal=document.getElementById('newsModal');
+  const body=document.getElementById('newsModalBody');
+  if(!modal||!body||!noticia) return;
+  document.getElementById('newsModalSubtitle').innerText=noticia.subtitulo||'Novedad';
+  document.getElementById('newsModalTitle').innerText=noticia.titulo||'';
+  const images=(noticia.imagenes||[]).filter(Boolean);
+  const gallery=images.length?'<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">'+images.map(url=>'<img src="'+App.esc(url)+'" alt="" class="w-full max-h-80 object-cover rounded-xl border" style="border-color:var(--line)">').join('')+'</div>':'';
+  body.innerHTML=gallery+'<div class="whitespace-pre-wrap text-sm leading-7 break-words" style="color:var(--muted)">'+App.esc(noticia.detalle||noticia.resumen||'')+'</div>';
+  modal.classList.remove('hidden');modal.classList.add('flex');
+  document.getElementById('btnCloseNews').focus();
+}
+function closeNews(){const modal=document.getElementById('newsModal');if(modal){modal.classList.add('hidden');modal.classList.remove('flex');}}
 function renderOtherResources(recursos, targetId){
   const c=document.getElementById(targetId);
   if(!c)return;
@@ -177,6 +204,7 @@ function loginSuccess(data){
     renderImportantLinks(rec);
     if(data.isDocente){renderOtherResources(rec,'teacherResourcesList');}else{renderOtherResources(rec,'resourcesList');}
   }).catch(()=>{});
+  App.api('getNoticias').then(renderNews).catch(()=>renderNews([]));
   if(data.isDocente){
     document.getElementById('userInfo').innerText='Prof. '+(data.usuario.nombre||'').split(' ')[0];
     document.getElementById('teacherName').innerText=data.usuario.nombre||'Profesor';
@@ -210,6 +238,9 @@ var App={
     updateThemeIcon();
     if(btnTheme) btnTheme.addEventListener('click',function(){var cur=localStorage.getItem('ept_theme')||'dark';var next=cur==='dark'?'light':'dark';applyTheme(next);updateThemeIcon();setTimeout(initGoogleSignIn,100);});
     var btnOut=document.getElementById('btnLogout'); if(btnOut) btnOut.addEventListener('click',function(){localStorage.removeItem('ept_id_token');localStorage.removeItem('ept_last_login');try{google.accounts.id.disableAutoSelect();}catch(e){}location.reload();});
+    var closeNewsButton=document.getElementById('btnCloseNews'); if(closeNewsButton) closeNewsButton.addEventListener('click',closeNews);
+    var newsModal=document.getElementById('newsModal'); if(newsModal) newsModal.addEventListener('click',function(e){if(e.target===newsModal) closeNews();});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape') closeNews();});
     var existing=localStorage.getItem('ept_id_token');
     if(existing && !Api.isTokenExpired(existing)){
       hideLogin();document.getElementById('loadingText').innerText='Reconectando...';
