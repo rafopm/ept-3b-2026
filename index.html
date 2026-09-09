@@ -41,6 +41,7 @@ const LOGO_THUMB_URL="https://drive.google.com/thumbnail?id="+LOGO_FILE_ID+"&sz=
 let LOGO_BASE64_CACHE=null;
 function getLogoHtml(){return '<img src="'+LOGO_THUMB_URL+'" class="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover bg-white">';}
 function formatLima(iso){if(!iso)return '';try{var d=new Date(iso);if(isNaN(d.getTime()))return iso;return d.toLocaleString('es-PE',{timeZone:'America/Lima',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});}catch(e){return iso;}}
+function formatNewsDate(value){if(!value)return '';try{var d=new Date(value);if(isNaN(d.getTime()))return String(value);return d.toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric',timeZone:'America/Lima'});}catch(e){return String(value);}}
 function getNotaStyle(letra){
   var l=String(letra||'').toUpperCase();
   var isLight=document.documentElement.classList.contains('light');
@@ -165,7 +166,8 @@ function renderNews(noticias){
   if(!Array.isArray(noticias)||!noticias.length){section.classList.add('hidden');return;}
   grid.innerHTML=noticias.map((n,index)=>{
     const image=n.imagen?'<img src="'+App.esc(n.imagen)+'" alt="" class="w-full h-40 object-cover">':'<div class="w-full h-40 flex items-center justify-center text-4xl bg-violet-500/10">📰</div>';
-    return '<button type="button" class="card2 rounded-2xl overflow-hidden text-left hover:border-violet-500/50 transition focus:outline-none focus:ring-2 focus:ring-violet-500" data-news-index="'+index+'"><div>'+image+'</div><div class="p-4"><p class="text-[10px] uppercase tracking-[0.16em] font-bold text-violet-600 dark:text-violet-400">'+App.esc(n.subtitulo||'Novedad')+'</p><h3 class="font-extrabold text-base mt-1 break-words">'+App.esc(n.titulo)+'</h3><p class="text-xs mt-2 line-clamp-2" style="color:var(--muted)">'+App.esc(n.resumen||n.detalle||'')+'</p><span class="inline-block text-xs font-bold mt-3 text-violet-600 dark:text-violet-400">Leer noticia →</span></div></button>';
+    const date=n.fecha?'<p class="text-[11px] mt-2" style="color:var(--muted)">📅 '+App.esc(formatNewsDate(n.fecha))+'</p>':'';
+    return '<button type="button" class="card2 rounded-2xl overflow-hidden text-left hover:border-violet-500/50 transition focus:outline-none focus:ring-2 focus:ring-violet-500" data-news-index="'+index+'"><div>'+image+'</div><div class="p-4"><p class="text-[10px] uppercase tracking-[0.16em] font-bold text-violet-600 dark:text-violet-400">'+App.esc(n.subtitulo||'Novedad')+'</p><h3 class="font-extrabold text-base mt-1 break-words">'+App.esc(n.titulo)+'</h3>'+date+'<p class="text-xs mt-2 line-clamp-2" style="color:var(--muted)">'+App.esc(n.resumen||n.detalle||'')+'</p><span class="inline-block text-xs font-bold mt-3 text-violet-600 dark:text-violet-400">Leer noticia →</span></div></button>';
   }).join('');
   section.classList.remove('hidden');
   grid.querySelectorAll('[data-news-index]').forEach(button=>button.addEventListener('click',()=>openNews(noticias[Number(button.getAttribute('data-news-index'))])));
@@ -174,7 +176,7 @@ function openNews(noticia){
   const modal=document.getElementById('newsModal');
   const body=document.getElementById('newsModalBody');
   if(!modal||!body||!noticia) return;
-  document.getElementById('newsModalSubtitle').innerText=noticia.subtitulo||'Novedad';
+  document.getElementById('newsModalSubtitle').innerText=(noticia.subtitulo||'Novedad')+(noticia.fecha?' · '+formatNewsDate(noticia.fecha):'');
   document.getElementById('newsModalTitle').innerText=noticia.titulo||'';
   const images=(noticia.imagenes||[]).filter(Boolean);
   const gallery=images.length?'<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">'+images.map(url=>'<img src="'+App.esc(url)+'" alt="" class="w-full max-h-80 object-cover rounded-xl border" style="border-color:var(--line)">').join('')+'</div>':'';
